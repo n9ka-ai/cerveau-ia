@@ -29,6 +29,8 @@ cerveau/
 └── skills/          tes skills à toi, reliés dans toutes tes IA
 ```
 
+Et quand tu fermes une conversation, ton IA **rêve** : elle relit ce qui s'est dit et range dans le cerveau ce qu'il faut retenir, toute seule. Ça marche avec Claude Code et Codex.
+
 Tes skills perso vivent aussi dans le cerveau : tu en améliores un, toutes tes IA ont la nouvelle version, même celle de ton serveur.
 
 ## Les 3 niveaux
