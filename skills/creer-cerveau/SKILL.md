@@ -45,7 +45,7 @@ Deux notions à garder en tête et à expliquer avec ces mots-là :
 
 8. **Sauvegarde locale.** `git init`, puis une première sauvegarde « cerveau : création ». Au niveau 1, arrête-toi là pour git : pas de GitHub.
 
-9. **Les rêves (sauvegarde automatique).** Explique en deux lignes : à la fin de chaque vraie conversation, l'IA relit ce qui s'est dit et range dans le cerveau ce qu'il faut retenir, même si on a oublié de dire « sauve ». Ça consomme un peu d'utilisation de l'abonnement à chaque fin de session. Sur un oui, lance `python <skill cerveau>/scripts/rever.py installer` (`py -3` sous Windows) : il branche le rêve dans Claude Code et Codex. Pour Codex, dis à l'utilisateur d'ouvrir Codex une fois et d'approuver le hook avec `/hooks`. Pour l'arrêter : `rever.py desinstaller`.
+9. **Sauver, puis rêver.** Explique en trois lignes : en fin de session, dis « sauve » ou « je ferme » et l'IA range ce qu'il faut retenir (ça ne coûte presque rien, elle a déjà tout en tête). Pour un projet où on oublie souvent, elle proposera de le faire toute seule : c'est le rêve, activé projet par projet, qui fait relire seulement nos échanges par un petit modèle, 5 fois par jour au maximum. N'installe rien maintenant : le skill `cerveau` le propose au premier « sauve » de chaque projet.
 
 10. **Niveau 2 : Obsidian et GitHub.** Suis [references/niveau-2.md](references/niveau-2.md) : ouvrir le cerveau dans Obsidian, exclure les liens `travail` de sa recherche, créer un dépôt GitHub **privé** (seulement après un oui explicite), sauvegarde automatique avec l'extension Obsidian Git.
 

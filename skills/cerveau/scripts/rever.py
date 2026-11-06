@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """Rêve : à la fin d'une session, l'IA range dans le cerveau ce qui doit être retenu.
 
-Branché sur le hook SessionEnd de Claude Code et de Codex. Il lit le JSON du hook sur
-l'entrée standard (transcript_path, cwd, session_id), puis lance en tâche de fond la
-même IA, sans interface, avec le geste « sauver » du skill cerveau.
+Branché sur le hook SessionEnd de Claude Code et de Codex. Il ne rêve que pour les projets
+dont la fiche porte `reve: auto`, et seulement à partir du dialogue (pas des fichiers lus
+ni des résultats de commandes), avec un petit modèle et un plafond par jour.
 
 Usage :
-  rever.py claude|codex          appelé par le hook (lit le JSON sur stdin)
+  rever.py claude|codex          appelé par le hook (lit le JSON du hook sur stdin)
   rever.py installer             branche le hook dans Claude Code et Codex (sans doublon)
   rever.py desinstaller          le retire
+  rever.py extraire <conversation.jsonl>   affiche le dialogue tel que le rêve le lirait
 
-Garde-fous : rien si la variable CERVEAU_REVE est posée (la session de rêve elle-même),
-rien si aucun cerveau n'est déclaré, rien pour une conversation courte, une seule fois
-par état de conversation.
+Réglages (variables d'environnement, facultatives) :
+  CERVEAU                 chemin du cerveau (sinon lu dans les règles globales)
+  CERVEAU_REVES_MAX       rêves maximum par jour, toutes IA confondues (défaut 5)
+  CERVEAU_REVE_CLAUDE     modèle Claude du rêve (défaut haiku)
+  CERVEAU_REVE_CODEX      modèle Codex du rêve (défaut : celui de Codex, effort bas)
 """
 import json
 import os
@@ -25,9 +28,12 @@ from pathlib import Path
 
 HOME = Path.home()
 ETAT = HOME / ".agents" / "reves"
-TAILLE_MIN = 15_000  # octets de conversation en dessous desquels on ne rêve pas
 SCRIPT = Path(os.path.abspath(__file__))  # garde le chemin du lien, pas celui du dépôt
 MARQUE = "rever.py"
+DIALOGUE_MAX = 30_000   # caractères de dialogue lus au maximum (la fin de la conversation)
+DIALOGUE_MIN = 1_500    # en dessous, la conversation est trop courte pour valoir un rêve
+REVES_MAX = int(os.environ.get("CERVEAU_REVES_MAX", "5"))
+BRUIT = re.compile(r"<(system-reminder|command-[a-z]+|local-command-[a-z]+|environment_context|user_instructions)>.*?</\1>", re.S)
 
 
 def cerveau():
@@ -47,31 +53,107 @@ def cerveau():
     return None
 
 
-def consigne(ia, transcript, cwd, brain):
+def norme(chemin):
+    """Chemin comparable : /c/Users -> c:/users sous Windows, barres obliques, sans / final."""
+    s = str(chemin).strip().replace("\\", "/")
+    m = re.match(r"^/([a-zA-Z])/(.*)", s)
+    if m and os.name == "nt":
+        s = f"{m.group(1)}:/{m.group(2)}"
+    s = os.path.expanduser(s).replace("\\", "/").rstrip("/")
+    return s.lower() if os.name == "nt" else s
+
+
+def projet_auto(brain, cwd):
+    """Le projet dont la session vient, s'il a `reve: auto` dans sa fiche ; sinon None."""
+    c = norme(cwd)
+    for fiche in sorted((brain / "projets").glob("*/fiche.md")):
+        try:
+            tete = fiche.read_text(encoding="utf-8").split("---")[1]
+        except (OSError, IndexError):
+            continue
+        champs = dict(re.findall(r"^([\w-]+):[ \t]*(.*?)[ \t]*(?:#.*)?$", tete, re.M))
+        if champs.get("reve", "").lower() != "auto":
+            continue
+        lieux = [norme(fiche.parent)] + ([norme(champs["travail"])] if champs.get("travail") else [])
+        if any(c == l or c.startswith(l + "/") for l in lieux):
+            return fiche.parent.name
+    return None
+
+
+def extraire(transcript):
+    """Le dialogue seul (utilisateur et IA), sans outils, fichiers lus ni réflexion interne."""
+    lignes = []
+    for brut in open(transcript, encoding="utf-8", errors="replace"):
+        try:
+            d = json.loads(brut)
+        except ValueError:
+            continue
+        if d.get("isSidechain"):
+            continue
+        role, morceaux = None, []
+        if d.get("type") in ("user", "assistant") and isinstance(d.get("message"), dict):   # Claude Code
+            role, c = d["type"], d["message"].get("content")
+            if isinstance(c, str):
+                morceaux = [c]
+            elif isinstance(c, list):
+                morceaux = [b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text"]
+        elif d.get("type") == "response_item":                                                # Codex
+            p = d.get("payload") or {}
+            if p.get("type") == "message" and p.get("role") in ("user", "assistant"):
+                role = p["role"]
+                morceaux = [b.get("text", "") for b in p.get("content") or [] if isinstance(b, dict)]
+        texte = BRUIT.sub("", "\n".join(morceaux)).strip()
+        if not role or not texte or texte.startswith(("# AGENTS.md", "<INSTRUCTIONS>")):
+            continue
+        lignes.append(f"{'Utilisateur' if role == 'user' else 'IA'} : {texte}")
+    dialogue = "\n\n".join(lignes)
+    return dialogue[-DIALOGUE_MAX:]
+
+
+def consigne(ia, dialogue, cwd, brain, projet):
     return (
-        f"Mode rêve. Une session {ia} vient de se terminer. La conversation complète est dans "
-        f"`{transcript}` (une ligne JSON par message), elle s'est déroulée dans `{cwd}`. "
-        f"Le cerveau de l'utilisateur est `{brain}` : lis son AGENTS.md et son index.md, puis applique "
-        "le geste « sauver » du skill cerveau à partir de cette conversation. Ne garde que ce qui servira "
-        "à une prochaine session : état du projet, décisions avec leur raison et les options écartées, "
-        "prochaines étapes, idées. Si la session a déjà sauvé elle-même (regarde la fin de journal.md), "
-        "complète seulement ce qui manque. Si la conversation n'a rien apporté de durable, ne change rien. "
-        "Le dossier où s'est tenue la conversation n'est pas forcément un dossier de travail : ne remplis "
-        "le champ `travail` d'une fiche que si la conversation le dit clairement. "
-        f"Ne modifie aucun fichier hors du cerveau. Signe ta ligne de journal « {ia} (rêve) ». "
-        "Ne lance aucune commande git : la sauvegarde est faite après toi."
+        f"Mode rêve. Une session {ia} sur le projet « {projet} » vient de se terminer, dans `{cwd}`. "
+        f"Son dialogue (sans les fichiers ni les commandes) est dans `{dialogue}`. "
+        f"Le cerveau est `{brain}`. Lis seulement son AGENTS.md, la fiche `projets/{projet}/fiche.md` "
+        "et les 20 dernières lignes de journal.md, puis applique le geste « sauver » du skill cerveau "
+        "à cette fiche : ne garde que ce qui servira à une prochaine session (état, décisions avec leur "
+        "raison et les options écartées, prochaines étapes). Si la fiche renvoie à une mémoire propre au "
+        "dossier de travail, n'y recopie pas le détail : seulement l'état général et les décisions. "
+        "Si la session a déjà sauvé (ligne de journal récente), complète seulement ce qui manque ; "
+        "si rien de durable n'a été dit, ne change rien. Ne touche à aucun autre fichier du cerveau "
+        f"sauf journal.md, où tu signes « {ia} (rêve) ». Ne lance aucune commande git."
     )
 
 
 def commande(ia, brain):
-    """Commande sans interface ; la consigne arrive par l'entrée standard (aucun souci de guillemets)."""
+    """Commande sans interface, petit modèle ; la consigne arrive par l'entrée standard."""
     if ia == "claude":
         exe = shutil.which("claude")
-        return exe and [exe, "-p", "--permission-mode", "acceptEdits",
-                        "--allowedTools", "Read", "Glob", "Grep", "Edit", "Write", "Bash(git:*)", "Skill",
-                        "--add-dir", str(brain)]
+        return exe and [exe, "-p", "--model", os.environ.get("CERVEAU_REVE_CLAUDE", "haiku"),
+                        "--permission-mode", "acceptEdits",
+                        "--allowedTools", "Read", "Edit", "Write", "--add-dir", str(brain)]
     exe = shutil.which("codex")
-    return exe and [exe, "exec", "-s", "workspace-write", "--skip-git-repo-check", "-C", str(brain), "-"]
+    if not exe:
+        return None
+    cmd = [exe, "exec", "-s", "workspace-write", "--skip-git-repo-check", "-C", str(brain),
+           "-c", 'model_reasoning_effort="low"']
+    if os.environ.get("CERVEAU_REVE_CODEX"):
+        cmd += ["-m", os.environ["CERVEAU_REVE_CODEX"]]
+    return cmd + ["-"]
+
+
+def compteur_du_jour():
+    f = ETAT / f"compteur-{time.strftime('%Y-%m-%d')}"
+    try:
+        n = int(f.read_text())
+    except (OSError, ValueError):
+        n = 0
+    return f, n
+
+
+def note(texte):
+    with open(ETAT / "reves.log", "a", encoding="utf-8") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M')} {texte}\n")
 
 
 def rever(ia):
@@ -81,28 +163,36 @@ def rever(ia):
         evt = json.load(sys.stdin)
     except (ValueError, OSError):
         return
-    transcript = evt.get("transcript_path")
-    if not transcript or not Path(transcript).exists():
-        return
-    taille = Path(transcript).stat().st_size
-    if taille < TAILLE_MIN:
-        return
+    transcript, cwd = evt.get("transcript_path"), evt.get("cwd") or ""
     brain = cerveau()
-    if not brain:
+    if not brain or not transcript or not Path(transcript).exists():
         return
+    projet = projet_auto(brain, cwd)
+    if not projet:
+        return  # projet sans rêve automatique : on sauve à la main
     ETAT.mkdir(parents=True, exist_ok=True)
     session = re.sub(r"[^\w.-]", "_", str(evt.get("session_id") or Path(transcript).stem))
+    dialogue = extraire(transcript)
+    if len(dialogue) < DIALOGUE_MIN:
+        return
     deja = ETAT / f"{session}.taille"
-    if deja.exists() and deja.read_text().strip() == str(taille):
+    if deja.exists() and deja.read_text().strip() == str(len(dialogue)):
         return  # déjà rêvé de cette conversation dans cet état
+    compteur, n = compteur_du_jour()
+    if n >= REVES_MAX:
+        note(f"{ia} {projet} : plafond de {REVES_MAX} rêves atteint aujourd'hui, pas de rêve")
+        return
     cmd = commande(ia, brain)
     if not cmd:
         return
-    deja.write_text(str(taille))
+    compteur.write_text(str(n + 1))
+    deja.write_text(str(len(dialogue)))
+    fichier = ETAT / f"{session}.dialogue.md"
+    fichier.write_text(dialogue, encoding="utf-8")
     tache = ETAT / f"{session}.tache.json"
     tache.write_text(json.dumps({
-        "cmd": cmd, "cwd": str(brain), "entree": consigne(ia, transcript, evt.get("cwd") or "?", brain),
-        "titre": f"{time.strftime('%Y-%m-%d %H:%M')} {ia} {session} ({taille} octets)",
+        "cmd": cmd, "cwd": str(brain), "entree": consigne(ia, fichier, cwd, brain, projet),
+        "titre": f"{time.strftime('%Y-%m-%d %H:%M')} {ia} {projet} ({len(dialogue)} caractères de dialogue)",
     }, ensure_ascii=False), encoding="utf-8")
     # On rend la main tout de suite : un relais Python détaché fait le rêve.
     options = dict(stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -133,6 +223,7 @@ def executer(tache):
         else:
             journal.write("rien de nouveau à retenir\n")
     Path(tache).unlink(missing_ok=True)
+    Path(str(tache).replace(".tache.json", ".dialogue.md")).unlink(missing_ok=True)
 
 
 # --- installation des hooks -------------------------------------------------
@@ -201,6 +292,8 @@ if __name__ == "__main__":
         except Exception as e:
             with open(ETAT / "reves.log", "a", encoding="utf-8") as f:
                 f.write(f"erreur : {e!r}\n")
+    elif action == "extraire" and len(sys.argv) > 2:
+        print(extraire(sys.argv[2]))
     elif action == "installer":
         installer()
     elif action == "desinstaller":

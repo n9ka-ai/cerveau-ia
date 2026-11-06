@@ -5,6 +5,7 @@ Modèle de `projets/<nom>/fiche.md`, pour tous les projets.
 etat: actif        # actif | en pause | fini
 mis-a-jour: <AAAA-MM-JJ>
 travail: <chemin du dossier de travail, ou rien>
+reve:              # vide = sauvegarde à la main ; auto = rêve en fin de session ; non = ne plus proposer
 ---
 
 # <Nom du projet>
