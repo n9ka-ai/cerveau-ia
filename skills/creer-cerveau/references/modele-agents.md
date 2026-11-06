@@ -35,6 +35,7 @@ Rien d'autre à la racine. Un dossier naît avec son premier fichier, jamais vid
 - Jamais de clé, mot de passe ou jeton dans le cerveau.
 - Tout fichier ajouté ou supprimé à la racine d'un projet ou dans `index.md` : mettre `index.md` à jour.
 - On archive plutôt que supprimer.
+- Un dossier alimenté par une machine (un export, une synchro automatique, par exemple `projets/<nom>/catalogue/`) est en lecture seule pour les IA : on le lit, on ne l'écrit jamais, le rangement et les rêves n'y touchent pas. Sa fiche dit qui l'alimente et à quel rythme.
 
 ## Journal
 
