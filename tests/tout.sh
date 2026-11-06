@@ -21,12 +21,34 @@ cd "$t/cerveau" && g init -q && printf '* text=auto eol=lf\njournal.md merge=uni
   && printf '# Cerveau\n' > AGENTS.md && printf '# Journal\n\n- début\n' > journal.md && g add -A && g commit -qm init
 
 # lier.sh
+mkdir -p "$t/cerveau/projets/mon-site" "$t/Projets/mon site (v2)"
+printf -- '---
+etat: actif
+travail:
+---
+
+# Mon site
+
+Le site vitrine.
+' > "$t/cerveau/projets/mon-site/fiche.md"
+fiche="$t/cerveau/projets/mon-site/fiche.md"
 bash "$scripts/lier.sh" "$t/Projets/mon-site" "$t/cerveau/projets/mon-site" >/dev/null
-verifie "lier : le lien mène au dossier de travail" '[ -f "$t/cerveau/projets/mon-site/travail/src/a.txt" ]'
-verifie "lier : le lien est exclu de git" 'g check-ignore -q projets/mon-site/travail'
-verifie "lier : relancer ne casse rien" 'bash "$scripts/lier.sh" "$t/Projets/mon-site" "$t/cerveau/projets/mon-site" >/dev/null'
-mkdir -p "$t/autre"
-verifie "lier : refuse un lien qui mène ailleurs" '! bash "$scripts/lier.sh" "$t/autre" "$t/cerveau/projets/mon-site" >/dev/null'
+verifie "lier : chemin écrit dans la fiche" 'grep -q "^travail: .*/Projets/mon-site$" "$fiche"'
+verifie "lier : bouton sous le titre" '[ "$(sed -n 6,8p "$fiche" | tr "
+" "|")" = "# Mon site||📂 [Ouvrir le dossier de travail](file:///$(grep "^travail:" "$fiche" | sed "s|^travail: /*||"))|" ]'
+verifie "lier : aucun lien créé dans le cerveau" '[ ! -e "$t/cerveau/projets/mon-site/travail" ]'
+avant="$(cat "$fiche")"
+bash "$scripts/lier.sh" "$t/Projets/mon-site" "$t/cerveau/projets/mon-site" >/dev/null
+verifie "lier : relancer ne change rien" '[ "$(cat "$fiche")" = "$avant" ]'
+bash "$scripts/lier.sh" "$t/Projets/mon site (v2)" "$t/cerveau/projets/mon-site" >/dev/null
+verifie "lier : nouveau dossier, un seul bouton, adresse encodée" '[ "$(grep -c "Ouvrir le dossier" "$fiche")" = 1 ] && grep -q "mon%20site%20%28v2%29)" "$fiche"'
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) MSYS_NO_PATHCONV=1 cmd /c mklink /J "$(cygpath -w "$t/cerveau/projets/mon-site/travail")" "$(cygpath -w "$t/Projets/mon-site")" >/dev/null ;;
+  *) ln -s "$t/Projets/mon-site" "$t/cerveau/projets/mon-site/travail" ;;
+esac
+bash "$scripts/lier.sh" "$t/Projets/mon-site" "$t/cerveau/projets/mon-site" >/dev/null
+verifie "lier : ancien lien retiré, dossier de travail intact" '[ ! -e "$t/cerveau/projets/mon-site/travail" ] && [ -f "$t/Projets/mon-site/src/a.txt" ]'
+verifie "lier : refuse un dossier introuvable" '! bash "$scripts/lier.sh" "$t/nulle-part" "$t/cerveau/projets/mon-site" >/dev/null'
 
 # relier-skills.sh
 mkdir -p "$t/cerveau/skills/rediger" "$t/agents" && echo "---" > "$t/cerveau/skills/rediger/SKILL.md"

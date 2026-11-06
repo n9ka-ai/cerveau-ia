@@ -4,7 +4,7 @@ Niveau 2 : lire le cerveau dans Obsidian et le sauvegarder sur GitHub. Fais ce q
 
 1. Si Obsidian n'est pas installé, envoie l'utilisateur sur https://obsidian.md (c'est gratuit) et attends qu'il l'ait.
 2. Dis-lui : « Ouvre Obsidian, choisis "Ouvrir un dossier comme coffre" et prends `<chemin du cerveau>`. » Il voit ses fiches comme un wiki, avec les liens entre elles.
-3. Les liens `travail` mènent à des dossiers parfois énormes (code, vidéos). Pour qu'Obsidian ne les fouille pas, écris dans `.obsidian/app.json` la clé `userIgnoreFilters` avec chaque chemin `projets/<nom>/travail/` (fusionne avec le contenu existant du fichier, ne l'écrase pas). Obsidian les montre toujours dans l'arborescence, mais ne les met plus dans sa recherche ni son graphe. Si un dossier de travail contient des notes utiles (un tableau de bord, un journal), l'utilisateur peut quand même les ouvrir d'un clic.
+3. Montre-lui le bouton « 📂 Ouvrir le dossier de travail » en haut d'une fiche : un clic ouvre le dossier du projet dans l'explorateur de fichiers. Obsidian peut demander une confirmation la première fois. Le code, lui, n'est jamais dans le cerveau, donc Obsidian reste léger.
 4. Ajoute au `.gitignore` du cerveau : `.obsidian/workspace*.json`, `.trash/`.
 
 ## Le journal ne se dispute jamais

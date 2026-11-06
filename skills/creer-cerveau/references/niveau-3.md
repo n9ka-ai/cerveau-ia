@@ -2,7 +2,7 @@ Niveau 3 : un agent qui tourne seul sur un serveur ou un Raspberry Pi partage le
 
 ## Ce que l'agent distant voit, et ce qu'il ne voit pas
 
-Il récupère tout le cerveau, mais pas les dossiers de travail de l'ordinateur : les liens `travail` sont exclus de git. C'est voulu. Il a besoin de savoir qui est l'utilisateur, ce qui se passe et ce qu'on attend de lui, pas de ses fichiers clients ni de ses vidéos. S'il travaille lui-même sur un projet (par exemple publier sur un site), il a son propre dossier de travail sur sa machine, noté dans la fiche du projet et dans son dossier `agents/<nom>/`.
+Il récupère tout le cerveau, mais pas les dossiers de travail de l'ordinateur : ils ne sont jamais dans le cerveau, seul leur chemin y est noté. C'est voulu. Il a besoin de savoir qui est l'utilisateur, ce qui se passe et ce qu'on attend de lui, pas de ses fichiers clients ni de ses vidéos. S'il travaille lui-même sur un projet (par exemple publier sur un site), il a son propre dossier de travail sur sa machine, noté dans la fiche du projet et dans son dossier `agents/<nom>/`.
 
 ## Mise en place
 

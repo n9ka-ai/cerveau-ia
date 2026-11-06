@@ -9,7 +9,7 @@ La mémoire commune de toutes mes IA (Claude, Codex, et tout agent sur mes serve
 
 - `AGENTS.md` : ce guide. `moi.md` : qui je suis. `index.md` : le sommaire. `journal.md` : ce qui s'est passé.
 - `projets/<nom>/fiche.md` : un dossier par projet, toujours avec sa fiche.
-- `projets/<nom>/travail` : lien vers le dossier de travail du projet quand il en a un (code, vidéos, son propre git). Le lien n'existe que sur la machine où est ce dossier, et il est exclu de git.
+- Dossier de travail : quand un projet en a un (code, vidéos, son propre git), il reste à son endroit, hors du cerveau. Le champ `travail` de la fiche donne son chemin, et le bouton « 📂 Ouvrir le dossier de travail » sous le titre l'ouvre depuis Obsidian.
 - `notes/idees/` : idées pas encore lancées. `notes/a-faire.md` : choses à faire sans projet.
 - `sources/` : documents bruts à ingérer (article, PDF, transcription). On ne les modifie jamais.
 - `infra/` : machines, comptes, outils (jamais de clé ni de mot de passe).

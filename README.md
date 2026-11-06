@@ -11,7 +11,7 @@ Deux skills, en français, pour Claude Code et Codex :
 
 ## L'idée en une phrase
 
-**Le cerveau**, c'est ce que tes IA *savent* : un dossier de notes, léger, rangé par projet. **Le dossier de travail**, c'est là où elles *fabriquent* : le code d'un site, des vidéos, un gros projet. Le cerveau garde une fiche par projet et un lien vers son dossier de travail.
+**Le cerveau**, c'est ce que tes IA *savent* : un dossier de notes, léger, rangé par projet. **Le dossier de travail**, c'est là où elles *fabriquent* : le code d'un site, des vidéos, un gros projet. Le cerveau garde une fiche par projet, avec un bouton qui ouvre son dossier de travail.
 
 ```text
 cerveau/
@@ -21,8 +21,8 @@ cerveau/
 ├── journal.md       ce qui s'est passé, qui l'a fait
 ├── projets/
 │   ├── mon-site/
-│   │   ├── fiche.md     état, décisions, prochaines étapes
-│   │   └── travail  →   lien vers le dossier du code (reste sur ta machine)
+│   │   └── fiche.md     état, décisions, prochaines étapes, et le bouton
+│   │                    « 📂 Ouvrir le dossier de travail » (le code reste à sa place)
 │   └── une-idee/
 │       └── fiche.md     un projet sans code vit entièrement ici
 ├── notes/           idées, choses à faire

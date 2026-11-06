@@ -8,7 +8,7 @@ Tu montes le cerveau de l'utilisateur : un seul dossier de notes où chaque proj
 
 Deux notions à garder en tête et à expliquer avec ces mots-là :
 - le **cerveau**, c'est ce que les IA *savent* : léger, que du texte, rangé par projet ;
-- le **dossier de travail**, c'est là où elles *fabriquent* : le code d'un site, des vidéos, tout ce qui a son propre git ou pèse lourd. Il reste hors du cerveau, et la fiche du projet garde un lien `travail` vers lui.
+- le **dossier de travail**, c'est là où elles *fabriquent* : le code d'un site, des vidéos, tout ce qui a son propre git ou pèse lourd. Il reste hors du cerveau, à son endroit ; la fiche du projet note son chemin et a un bouton « 📂 Ouvrir le dossier de travail ».
 
 1. **Dossier et niveau.** Prends le dossier passé en argument, sinon le dossier courant s'il est vide, sinon `~/cerveau` ; confirme-le en une ligne. Demande le niveau visé en expliquant les trois en une ligne chacun (1 : tout sur ton ordi ; 2 : en plus tu le lis dans Obsidian et il est sauvegardé sur GitHub ; 3 : en plus un agent sur un serveur le partage). Par défaut 1. Si le dossier contient déjà un `AGENTS.md` de cerveau, ne repars pas de zéro : lis-le avec `moi.md` et `index.md`, dis ce que tu as trouvé, saute les questions déjà répondues et fais seulement ce qui manque pour le niveau demandé (étape 9, 10 ou 11).
 
@@ -33,13 +33,13 @@ Deux notions à garder en tête et à expliquer avec ces mots-là :
    ├── moi.md        qui est l'utilisateur (modèle : references/modele-moi.md)
    ├── index.md      le sommaire des projets
    ├── journal.md    ce qui s'est passé, une ligne par action, signée
-   ├── .gitignore    projets/*/travail, .tmp/, .env*, .DS_Store, node_modules/
+   ├── .gitignore    .tmp/, .env*, .DS_Store, node_modules/
    ├── .gitattributes  « * text=auto eol=lf » et « journal.md merge=union » (voir niveau-2.md)
    └── projets/      une fiche par projet (étape 6)
    ```
    Ne crée jamais un dossier vide « pour plus tard » : `notes/`, `skills/`, `sources/`, `infra/`, `agents/`, `_archive/` naissent avec leur premier fichier. Jamais de `CLAUDE.md` dans le cerveau : `AGENTS.md` est lu par toutes les IA. Pas de dossier par IA (`claude/`, `codex/`) : toutes partagent la même mémoire.
 
-6. **Les projets.** Pour chaque projet de la question 5, crée `projets/<nom-court>/fiche.md` avec [references/modele-fiche.md](references/modele-fiche.md), en n'écrivant que ce que l'utilisateur a dit (« À compléter » plutôt qu'inventer). Quand un projet a déjà un dossier sur l'ordi, applique le geste « adopter un dossier existant » du skill `cerveau` : il crée le lien `travail` et, si ce dossier a déjà sa propre mémoire, demande s'il faut la garder, la fusionner ou la remplacer. Mets la tâche de la question 8 en premier dans `## Prochaines étapes` de la fiche concernée. Remplis `index.md` (un tableau projet | fiche | dossier de travail | état) et écris la première ligne de `journal.md`.
+6. **Les projets.** Pour chaque projet de la question 5, crée `projets/<nom-court>/fiche.md` avec [references/modele-fiche.md](references/modele-fiche.md), en n'écrivant que ce que l'utilisateur a dit (« À compléter » plutôt qu'inventer). Quand un projet a déjà un dossier sur l'ordi, applique le geste « adopter un dossier existant » du skill `cerveau` : il note son chemin dans la fiche, avec le bouton pour l'ouvrir, et, si ce dossier a déjà sa propre mémoire, demande s'il faut la garder, la fusionner ou la remplacer. Mets la tâche de la question 8 en premier dans `## Prochaines étapes` de la fiche concernée. Remplis `index.md` (un tableau projet | fiche | dossier de travail | état) et écris la première ligne de `journal.md`.
 
 7. **Tes skills.** Regarde `~/.agents/skills` et `~/.claude/skills` : s'il y a des skills que l'utilisateur a créés ou modifiés lui-même (pas installés depuis le dépôt de quelqu'un d'autre), montre la liste et propose de les ranger dans le cerveau avec le geste « sauver un skill » du skill `cerveau`. Au niveau 1 c'est un confort, aux niveaux 2 et 3 c'est ce qui les sauvegarde et les apporte aux autres machines.
 
@@ -47,8 +47,8 @@ Deux notions à garder en tête et à expliquer avec ces mots-là :
 
 9. **Sauver, puis rêver.** Explique en trois lignes : en fin de session, dis « je ferme », « sauvegarde » ou « sauve » et l'IA range ce qu'il faut retenir (ça ne coûte presque rien, elle a déjà tout en tête). Pour un projet où on oublie souvent, elle proposera de le faire toute seule : c'est le rêve, activé projet par projet, qui fait relire seulement nos échanges par un petit modèle, 5 fois par jour au maximum. N'installe rien maintenant : le skill `cerveau` le propose au premier « sauve » de chaque projet.
 
-10. **Niveau 2 : Obsidian et GitHub.** Suis [references/niveau-2.md](references/niveau-2.md) : ouvrir le cerveau dans Obsidian, exclure les liens `travail` de sa recherche, créer un dépôt GitHub **privé** (seulement après un oui explicite), sauvegarde automatique avec l'extension Obsidian Git.
+10. **Niveau 2 : Obsidian et GitHub.** Suis [references/niveau-2.md](references/niveau-2.md) : ouvrir le cerveau dans Obsidian, créer un dépôt GitHub **privé** (seulement après un oui explicite), sauvegarde automatique avec l'extension Obsidian Git.
 
 11. **Niveau 3 : agent distant.** Suis [references/niveau-3.md](references/niveau-3.md) : le serveur récupère le cerveau par git, l'agent a son dossier `agents/<nom>/`, il tire avant de lire et pousse après avoir écrit, et il range le cerveau chaque nuit.
 
-Termine par une liste de vérification, une coche ou une croix par ligne : questions validées ; `~/.agents/AGENTS.md` contient les deux sections et les fichiers des autres IA pointent vers lui ; squelette exact, sans dossier vide ni `CLAUDE.md` ; une fiche avec un état par projet ; chaque dossier de travail relié et exclu de git ; sauvegarde faite ; niveau 2 ou 3 fait si demandé. Puis dis en 4 lignes où est le cerveau et les phrases à utiliser : « nouveau projet : … », « charge le projet X », « je ferme » (ou « sauve ») en fin de session, « ingère ce document », « range le cerveau ». Rappelle en une ligne que, pour les projets où il oublie de sauver, l'IA lui proposera le rêve automatique au premier « je ferme ». Propose de s'attaquer tout de suite à la tâche de la question 8.
+Termine par une liste de vérification, une coche ou une croix par ligne : questions validées ; `~/.agents/AGENTS.md` contient les deux sections et les fichiers des autres IA pointent vers lui ; squelette exact, sans dossier vide ni `CLAUDE.md` ; une fiche avec un état par projet ; chaque dossier de travail noté dans sa fiche, avec son bouton, et rien de lui dans le cerveau ; sauvegarde faite ; niveau 2 ou 3 fait si demandé. Puis dis en 4 lignes où est le cerveau et les phrases à utiliser : « nouveau projet : … », « charge le projet X », « je ferme » (ou « sauve ») en fin de session, « ingère ce document », « range le cerveau ». Rappelle en une ligne que, pour les projets où il oublie de sauver, l'IA lui proposera le rêve automatique au premier « je ferme ». Propose de s'attaquer tout de suite à la tâche de la question 8.

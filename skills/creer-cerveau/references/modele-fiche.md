@@ -10,6 +10,8 @@ reve:              # vide = sauvegarde à la main ; auto = rêve en fin de sessi
 
 # <Nom du projet>
 
+📂 [Ouvrir le dossier de travail](file:///<chemin>)   ← seulement s'il a un dossier de travail ; écrit par `lier.sh`
+
 <Un paragraphe : ce que c'est et le but.>
 
 ## Repères
@@ -27,4 +29,4 @@ reve:              # vide = sauvegarde à la main ; auto = rêve en fin de sessi
 - <AAAA-MM-JJ> Pas <option écartée>, parce que <raison>.
 ```
 
-Laisse `## Décisions` de côté tant qu'il n'y a pas de première décision avec sa raison. Le champ `travail` donne le chemin même sur les machines où le lien n'existe pas : un agent distant sait ainsi que ce projet a un dossier ailleurs.
+Laisse `## Décisions` de côté tant qu'il n'y a pas de première décision avec sa raison. Le champ `travail` et le bouton sont écrits par `lier.sh` du skill `cerveau`, ne les tape pas à la main. Le chemin est celui de la machine où se trouve le dossier : un agent distant sait ainsi que ce projet a un dossier ailleurs, même s'il ne peut pas l'ouvrir.
