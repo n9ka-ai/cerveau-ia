@@ -1,0 +1,36 @@
+---
+name: cerveau
+description: Les gestes du quotidien avec le cerveau de l'utilisateur (sa mémoire partagée par toutes ses IA) : charger un projet, nouveau projet, sauver, ingérer un document, interroger, ranger, sortir un projet en dossier de travail, adopter un dossier existant, archiver. Use when the user says « charge le projet X », « nouveau projet », « sauve », « ingère ça », « range le cerveau », « relie ce dossier », or at the end of a work session.
+argument-hint: "[charger|nouveau|sauver|ingerer|interroger|ranger|sortir|adopter|archiver] [projet ou fichier]"
+---
+
+Le chemin du cerveau est dans la section `## Cerveau` des règles globales (`~/.agents/AGENTS.md`). Lis d'abord son `AGENTS.md` et son `index.md` : ils priment sur ce skill pour les détails propres à cet utilisateur. Si le cerveau a un dépôt distant, récupère les nouveautés (`git pull --rebase`) avant de lire et envoie après avoir écrit. Parle simplement, sans jargon. Chaque geste finit par une ligne signée dans `journal.md` : `- AAAA-MM-JJ · <IA> (<machine>) · <projet> : ce qui a été fait.`, puis une sauvegarde git.
+
+Trouver le projet : par son nom dans `index.md`. Si tu es ouvert dans un dossier qui n'est pas le cerveau, cherche dans `index.md` le projet dont le dossier de travail est ce dossier (ou un de ses parents). Si aucun ne correspond et que le dossier a l'air d'un vrai projet, propose de l'adopter.
+
+**Charger un projet.** Lis sa fiche, puis les dernières lignes du journal qui le concernent, puis, s'il a un dossier de travail, son `AGENTS.md` et les fichiers de mémoire listés dans `## Repères`. Résume en 3 lignes : où on en est, la prochaine étape, une décision récente à respecter. Ne relis pas tout le dossier de travail.
+
+**Nouveau projet.** Vérifie dans `index.md` qu'il n'existe pas déjà sous un autre nom. Pose 3 questions courtes au plus (le but, ce qui veut dire « fini », une échéance), puis crée `projets/<nom-court>/fiche.md` (modèle dans le skill `creer-cerveau`, `references/modele-fiche.md`) et sa ligne dans `index.md`. S'il y aura du code, des médias lourds ou un git à lui, enchaîne sur « sortir en dossier de travail ».
+
+**Sauver** (sur demande ou en fin de session). Dans la fiche : `## Où on en est`, `## Prochaines étapes` (cocher ce qui est fait), `mis-a-jour`, et chaque décision prise avec sa raison et les options écartées. Une idée qui n'appartient à aucun projet va dans `notes/idees/<titre>.md`, une chose à faire sans projet dans `notes/a-faire.md`. N'écris que ce qui servira à la prochaine session : pas de compte rendu de ce que tu as fait étape par étape. Puis journal et sauvegarde.
+
+**Ingérer un document** (article, PDF, transcription, notes de réunion). Copie-le tel quel dans `sources/<AAAA-MM-JJ>-<titre>.<ext>` ; on ne le modifiera plus. Lis-le, dis à l'utilisateur en 3 à 5 lignes ce qu'il apporte, demande ce qu'il veut en retenir s'il y a un doute. Puis reporte ce qui compte dans les fiches concernées (un document peut toucher plusieurs projets), avec un lien vers la source, et signale toute contradiction avec ce que le cerveau disait avant. Mets à jour `index.md` si une fiche est née.
+
+**Interroger.** Réponds à partir du cerveau en citant les fiches utilisées. Si la réponse est une vraie synthèse qui resservira (une comparaison, une décision, un bilan), propose de la ranger dans la fiche ou dans une nouvelle note du projet, pour que la prochaine IA n'ait pas à la refaire.
+
+**Ranger** (sur demande, ou chaque nuit chez un agent distant). Passe tout le cerveau en revue et classe ce que tu trouves :
+- sûr, à faire seul : déplacer le journal du mois clos dans `_archive/journal-AAAA-MM.md` ; ajouter à `index.md` une fiche qui n'y est pas, retirer une ligne dont la fiche n'existe plus ; un fichier posé à la racine qui a clairement son projet ; vérifier que les fichiers de règles des IA pointent toujours vers `~/.agents/AGENTS.md` (sur l'ordinateur) ;
+- à proposer, jamais fait seul : deux fiches qui parlent du même sujet, deux infos qui se contredisent, une fiche « actif » sans mise à jour depuis plus de 30 jours, un lien `travail` mort, un projet fini à archiver, un dossier par IA ou un dossier vide.
+Sur l'ordinateur, montre la liste à proposer et fais ce qui est accepté. Chez un agent distant, écris-la dans `notes/a-ranger.md` (en remplaçant la liste précédente) pour que l'utilisateur la voie au matin. Ne supprime jamais : on archive.
+
+**Sortir en dossier de travail** (un projet qui grossit : du code, des vidéos, un git à lui). Demande où le mettre (par défaut à côté de ses autres projets, par exemple `~/Projets/<nom>`). Déplace-y les fichiers lourds ou techniques ; les notes restent dans le cerveau. Crée le lien avec `bash <ce skill>/scripts/lier.sh <dossier de travail> <cerveau>/projets/<nom>` : il fabrique le lien `travail`, l'ajoute au `.gitignore` et vérifie qu'il marche. Remplis le champ `travail` de la fiche, la colonne de `index.md`, et, au niveau 2, ajoute le chemin aux exclusions d'Obsidian (voir `references/niveau-2.md` du skill `creer-cerveau`).
+
+**Adopter un dossier existant** (un projet qui avait déjà son dossier avant le cerveau). Crée la fiche et le lien comme ci-dessus, sans rien déplacer. Puis regarde si ce dossier a déjà sa propre mémoire : un `AGENTS.md` ou `CLAUDE.md` avec de l'état de projet dedans, un journal, un tableau de bord, des notes de suivi. Si oui, montre ce que tu as trouvé et demande, avec ta recommandation :
+- **garder** (le plus souvent) : sa mémoire reste où elle est et marche comme avant ; la fiche reste courte (ce que c'est, l'état général, les décisions qui comptent hors du dossier) et liste dans `## Repères` les fichiers à lire là-bas ;
+- **fusionner** : l'état, les décisions et les notes de suivi passent dans la fiche ; l'`AGENTS.md` du dossier ne garde que le technique (commandes, conventions) et une ligne qui renvoie vers la fiche ; les anciens fichiers de suivi vont dans `_archive/` du cerveau ;
+- **remplacer** : la mémoire du dossier est périmée ; archive-la dans le cerveau et repars d'une fiche neuve.
+Ne modifie jamais les fichiers d'un dossier de travail qui appartient à quelqu'un d'autre (un client, une équipe) sans le demander.
+
+**Archiver** un projet fini. Passe son `etat` à `fini`, déplace `projets/<nom>/` dans `_archive/<nom>/` sans le modifier, mets `index.md` à jour. Le dossier de travail, lui, ne bouge pas : dis-le à l'utilisateur.
+
+Termine chaque geste par une ligne : ce qui a changé, et ce que l'utilisateur doit faire s'il y a quelque chose.
