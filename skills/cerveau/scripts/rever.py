@@ -125,14 +125,28 @@ def consigne(ia, dialogue, cwd, brain, projet):
     )
 
 
+def trouver(nom):
+    """Chemin de l'IA. Une app lancée depuis le Dock (macOS) ou un hook a souvent un PATH réduit :
+    on regarde aussi les endroits d'installation habituels."""
+    exe = shutil.which(nom)
+    if exe:
+        return exe
+    lieux = [HOME / ".local" / "bin", HOME / ".claude" / "local", HOME / ".npm-global" / "bin",
+             HOME / ".bun" / "bin", Path("/opt/homebrew/bin"), Path("/usr/local/bin"), Path("/usr/bin")]
+    lieux += sorted((HOME / ".nvm" / "versions" / "node").glob("*/bin"), reverse=True)
+    if os.name == "nt":
+        lieux += [Path(os.environ.get("APPDATA", "")) / "npm"]
+    return shutil.which(nom, path=os.pathsep.join(str(l) for l in lieux))
+
+
 def commande(ia, brain):
     """Commande sans interface, petit modèle ; la consigne arrive par l'entrée standard."""
     if ia == "claude":
-        exe = shutil.which("claude")
+        exe = trouver("claude")
         return exe and [exe, "-p", "--model", os.environ.get("CERVEAU_REVE_CLAUDE", "haiku"),
                         "--permission-mode", "acceptEdits",
                         "--allowedTools", "Read", "Edit", "Write", "--add-dir", str(brain)]
-    exe = shutil.which("codex")
+    exe = trouver("codex")
     if not exe:
         return None
     cmd = [exe, "exec", "-s", "workspace-write", "--skip-git-repo-check", "-C", str(brain),
