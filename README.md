@@ -25,8 +25,11 @@ cerveau/
 │   │   └── travail  →   lien vers le dossier du code (reste sur ta machine)
 │   └── une-idee/
 │       └── fiche.md     un projet sans code vit entièrement ici
-└── notes/           idées, choses à faire
+├── notes/           idées, choses à faire
+└── skills/          tes skills à toi, reliés dans toutes tes IA
 ```
+
+Tes skills perso vivent aussi dans le cerveau : tu en améliores un, toutes tes IA ont la nouvelle version, même celle de ton serveur.
 
 ## Les 3 niveaux
 

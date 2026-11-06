@@ -13,6 +13,7 @@ La mémoire commune de toutes mes IA (Claude, Codex, et tout agent sur mes serve
 - `notes/idees/` : idées pas encore lancées. `notes/a-faire.md` : choses à faire sans projet.
 - `sources/` : documents bruts à ingérer (article, PDF, transcription). On ne les modifie jamais.
 - `infra/` : machines, comptes, outils (jamais de clé ni de mot de passe).
+- `skills/<nom>/` : mes skills à moi (créés ou adaptés par moi). Ils sont reliés dans le dossier de skills de chaque IA, sur chaque machine, par `relier-skills.sh` du skill `cerveau` : je corrige une fois, toutes mes IA en profitent. Les skills installés depuis le dépôt de quelqu'un d'autre restent dans `~/.agents/skills` ; ceux d'un seul projet restent dans son dossier de travail.
 - `agents/<nom>/` : le dossier d'un agent qui travaille seul (sa personnalité, ses tâches programmées).
 - `_archive/` : projets terminés et notes mortes, lisibles mais plus prioritaires.
 
@@ -30,7 +31,7 @@ Rien d'autre à la racine. Un dossier naît avec son premier fichier, jamais vid
 - Une info, un seul endroit : on met à jour la fiche existante plutôt que créer un fichier.
 - Chaque décision s'écrit dans la fiche (`## Décisions`) avec sa raison, et aussi chaque option écartée, pour qu'aucune IA ne la repropose. Lis ces lignes avant de proposer un changement.
 - Pas de rapports d'étape ni de `final-v2.md` : le résultat utile va dans la fiche, le reste à la corbeille.
-- Une méthode à refaire devient un skill, pas une note.
+- Une méthode à refaire devient un skill dans `skills/`, pas une note.
 - Jamais de clé, mot de passe ou jeton dans le cerveau.
 - Tout fichier ajouté ou supprimé à la racine d'un projet ou dans `index.md` : mettre `index.md` à jour.
 - On archive plutôt que supprimer.

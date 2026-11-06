@@ -12,6 +12,8 @@ Il récupère tout le cerveau, mais pas les dossiers de travail de l'ordinateur 
 4. Copie [../scripts/synchro.sh](../scripts/synchro.sh) sur le serveur en `~/cerveau-synchro.sh` (`chmod +x`) et lance-le une fois à la main avec `~/cerveau-synchro.sh ~/cerveau <nom>` : il doit afficher `synchro ok`.
 5. Programme-le toutes les 15 minutes (`crontab -e` : `*/15 * * * * ~/cerveau-synchro.sh ~/cerveau <nom> >> ~/cerveau-synchro.log 2>&1`).
 
+6. Les skills : installe le skill `cerveau` sur le serveur, puis `relier-skills.sh ~/cerveau ~/.agents/skills <dossier de skills de l'agent>` pour que l'agent ait les mêmes skills perso que l'ordinateur. Ajoute cette commande juste après la synchro dans la tâche programmée : un skill amélioré sur l'ordinateur arrive tout seul chez l'agent.
+
 ## Le dossier de l'agent
 
 Crée `agents/<nom>/` dans le cerveau avec un `README.md` : qui est cet agent, sur quelle machine, ce qu'il fait seul (ses tâches programmées), ce qu'il ne fait jamais, où sont ses dossiers de travail sur sa machine. Ajoute dans les instructions de démarrage de l'agent (son propre fichier de consignes, selon l'outil qu'il utilise) :

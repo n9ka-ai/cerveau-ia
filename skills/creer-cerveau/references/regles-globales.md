@@ -44,5 +44,5 @@ Mon cerveau est `<chemin complet>` : toutes mes IA partagent cette mémoire, ran
 - Avant de travailler sur un projet, lis `AGENTS.md` et `index.md` du cerveau, puis la fiche du projet. Si tu es ouvert dans un dossier de travail, `index.md` dit à quel projet il appartient.
 - Le code, les vidéos et les gros fichiers restent dans le dossier de travail ; le cerveau garde ce qu'il faut *savoir* : état, décisions et leur raison, prochaines étapes.
 - En fin de session, sauve : mets la fiche à jour et ajoute une ligne signée dans `journal.md`.
-- Mes skills sont dans `~/.agents/skills` (un lien par skill dans `~/.claude/skills`). Un skill propre à une seule IA reste dans son dossier à elle.
+- Mes skills à moi vivent dans `<cerveau>/skills/` et sont reliés dans `~/.agents/skills` et `~/.claude/skills`. Un skill que je crée ou modifie va là (skill `cerveau`, geste « sauver un skill »). Les skills installés depuis le dépôt de quelqu'un d'autre restent dans `~/.agents/skills` ; un skill propre à une seule IA reste dans son dossier à elle.
 ```
