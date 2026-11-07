@@ -173,6 +173,7 @@ def trier(depuis, maximum, auto=False, fichier=None):
         _trier(brain, depuis, maximum, local, lent, fichier)
     finally:
         v.unlink(missing_ok=True)
+        ETAT.with_name("rattrapage.avancement").unlink(missing_ok=True)
 
 
 def _trier(brain, depuis, maximum, local, lent, fichier):
@@ -186,9 +187,14 @@ def _trier(brain, depuis, maximum, local, lent, fichier):
     if fichier and Path(fichier).exists() and all(str(f) != str(fichier) for _, _, f in liste):
         ia = "codex" if ".codex" in str(fichier) else "claude"
         liste.append((Path(fichier).stat().st_mtime, ia, Path(fichier)))  # la session qui vient de finir
-    for m, ia, f in liste:
+    avance = ETAT.with_name("rattrapage.avancement")
+    debut = datetime.now().strftime("%H:%M")
+    for rang, (m, ia, f) in enumerate(liste, 1):
         if maximum and faits >= maximum:
             break
+        avance.write_text(f"tri en cours depuis {debut} : conversation {rang} sur {len(liste)} à examiner "
+                          f"(celle du {datetime.fromtimestamp(m):%d/%m %H:%M}), {faits} triée(s) ce passage",
+                          encoding="utf-8")
         cle = str(f)
         texte = dialogue(f)
         if len(texte) < MINIMUM or texte.split(" : ", 1)[-1].startswith(INTERNES):
@@ -267,6 +273,9 @@ def marquer(ids):
 def compter(reactiver=False):
     if reactiver:
         LENT_MARQUE.unlink(missing_ok=True)
+    avance = ETAT.with_name("rattrapage.avancement")
+    if avance.exists() and ETAT.with_name("rattrapage.verrou").exists():
+        print(avance.read_text(encoding="utf-8"))
     etat = lire_etat()
     n = sum(1 for e in etat.values() if e.get("statut") == "trie")
     print(f"à ranger : {n} conversation(s) triée(s)" + (" → propose de les ranger (geste « rattraper »)" if n else ""))
