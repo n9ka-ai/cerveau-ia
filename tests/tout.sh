@@ -88,6 +88,35 @@ verifie "rêve : hook branché une seule fois, sans toucher aux autres" '[ "$(gr
 HOME="$t/home" USERPROFILE="$t/home" "$py" -I "$scripts/rever.py" desinstaller >/dev/null
 verifie "rêve : désinstallation propre" '! grep -q rever.py "$t/home/.claude/settings.json" && grep -q autre "$t/home/.claude/settings.json"'
 
+# rattraper.py (sans Ollama : dialogues préparés pour un petit modèle)
+s="$t/home/.codex/sessions/2026/10/01"; mkdir -p "$s"
+long="$(printf 'Le site de la boulangerie doit sortir avant Noël. %.0s' $(seq 1 40))"
+printf '{"type":"session_meta","payload":{"cwd":"/x/boulangerie"}}\n{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"%s"}]}}\n' "$long" > "$s/rollout-a.jsonl"
+printf '{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Mode rêve. %s"}]}}\n' "$long" > "$s/rollout-reve.jsonl"
+touch -t 202610011200 "$s"/*.jsonl
+rat() { HOME="$t/home" USERPROFILE="$t/home" CERVEAU="$t/cerveau" OLLAMA_HOST=127.0.0.1:9 "$py" -I "$scripts/rattraper.py" "$@" 2>/dev/null; }
+rat trier --depuis 2026-09-01 >/dev/null
+verifie "rattraper : trouve la conversation, ignore les rêves" '[ "$(rat rapport | grep -c "\"id\"")" = 1 ] && rat rapport | grep -q "/x/boulangerie"'
+verifie "rattraper : dialogue préparé sans modèle local" 'grep -q "boulangerie" "$t/home/.agents/reves/rattrapage/"*.md'
+rat trier --depuis 2026-09-01 >/dev/null
+verifie "rattraper : ne relit pas une conversation déjà vue" '[ "$(rat rapport | grep -c "\"id\"")" = 1 ]'
+rat marquer >/dev/null
+verifie "rattraper : marquer vide le rapport" '[ "$(rat rapport | tr -d "[:space:]")" = "[]" ] && ! ls "$t/home/.agents/reves/rattrapage/"*.md >/dev/null 2>&1'
+
+# ranger.py
+c="$t/cerveau"; mkdir -p "$c/projets/vieux" "$c/projets/neuf"
+printf -- '---\netat: actif\nmis-a-jour: 2020-01-01\n---\n\n# Vieux projet\n' > "$c/projets/vieux/fiche.md"
+printf -- '---\netat: en pause\n---\n\n# Projet neuf\n' > "$c/projets/neuf/fiche.md"
+printf '# Index\n\n| Projet | Fiche | Dossier de travail | État |\n|---|---|---|---|\n| Vieux | [[projets/vieux/fiche]] | — | actif |\n| Parti | [[projets/parti/fiche]] | — | fini |\n\n## Ailleurs\n' > "$c/index.md"
+printf '# Journal\n\n- 2020-01-05 · test · vieux : ancien\n- %s · test · neuf : récent\n' "$(date +%Y-%m-%d)" > "$c/journal.md"
+avant="$(cat "$c/index.md")"; "$py" -I "$scripts/ranger.py" "$c" --essai >/dev/null
+verifie "ranger : --essai n'écrit rien" '[ "$(cat "$c/index.md")" = "$avant" ]'
+"$py" -I "$scripts/ranger.py" "$c" >/dev/null
+verifie "ranger : index complété et nettoyé" 'grep -q "\[\[projets/neuf/fiche\]\] | — | en pause |" "$c/index.md" && ! grep -q "projets/parti" "$c/index.md" && grep -q "## Ailleurs" "$c/index.md"'
+verifie "ranger : journal des mois clos archivé" 'grep -q "ancien" "$c/_archive/journal-2020-01.md" && ! grep -q "ancien" "$c/journal.md" && grep -q "récent" "$c/journal.md"'
+verifie "ranger : fiche oubliée signalée" 'grep -q "projets/vieux/fiche" "$c/notes/a-ranger.md"'
+verifie "ranger : relancer ne change rien" '[ "$("$py" -I "$scripts/ranger.py" "$c" | cut -d" " -f3-)" = "rien à ranger" ]'
+
 echo; echo "$ok réussis, $ko échoués ($(uname -s))"
 rm -rf "$t" 2>/dev/null
 [ $ko = 0 ]

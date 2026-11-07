@@ -26,7 +26,7 @@ Ajoute la section « Agents distants » à l'`AGENTS.md` du cerveau, et dans la 
 
 ## Le rangement de nuit
 
-C'est ce qui fait qu'un cerveau ne pourrit pas. Programme chez l'agent, chaque nuit, le geste « ranger » du skill `cerveau` (installe le skill sur le serveur, par exemple dans `~/.agents/skills/cerveau/`). Il range ce qui est sûr (journal du mois clos, index à jour, liens cassés), et note le reste dans `notes/a-ranger.md` pour l'utilisateur, sans rien supprimer.
+C'est ce qui fait qu'un cerveau ne pourrit pas. Pas besoin d'IA pour ça : copie `scripts/ranger.py` du skill `cerveau` sur le serveur (par exemple `~/cerveau-ranger.py`) et programme-le chaque nuit, juste avant une synchro, par exemple avec `crontab -e` : `30 3 * * * python3 ~/cerveau-ranger.py ~/cerveau >> ~/.cache/cerveau-ranger.log 2>&1`. Il fait seulement ce qui est sûr : il complète l'index, archive le journal des mois clos et écrit dans `notes/a-ranger.md` ce qui mérite un coup d'œil (fiche « actif » oubliée depuis 30 jours, fiche sans état…). Il ne supprime rien et ne coûte rien. Le rangement qui demande de réfléchir (deux fiches sur le même sujet, une contradiction) se fait à la demande, quand l'utilisateur dit « range le cerveau » à son IA. Teste d'abord avec `--essai`, qui montre sans rien écrire.
 
 ## Règle de cohabitation
 

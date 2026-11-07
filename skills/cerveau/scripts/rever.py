@@ -33,7 +33,8 @@ MARQUE = "rever.py"
 DIALOGUE_MAX = 30_000   # caractères de dialogue lus au maximum (la fin de la conversation)
 DIALOGUE_MIN = 1_500    # en dessous, la conversation est trop courte pour valoir un rêve
 REVES_MAX = int(os.environ.get("CERVEAU_REVES_MAX", "5"))
-BRUIT = re.compile(r"<(system-reminder|command-[a-z]+|local-command-[a-z]+|environment_context|user_instructions)>.*?</\1>", re.S)
+BRUIT = re.compile(r"<(system-reminder|command-[a-z]+|local-command-[a-z]+|environment_context|user_instructions"
+                   r"|skill|external_[a-z_]+|turn_aborted)>.*?</\1>|^Base directory for this skill:.*", re.S | re.M)
 
 
 def cerveau():
@@ -80,7 +81,7 @@ def projet_auto(brain, cwd):
     return None
 
 
-def extraire(transcript):
+def extraire(transcript, maximum=DIALOGUE_MAX):
     """Le dialogue seul (utilisateur et IA), sans outils, fichiers lus ni réflexion interne."""
     lignes = []
     for brut in open(transcript, encoding="utf-8", errors="replace"):
@@ -107,7 +108,7 @@ def extraire(transcript):
             continue
         lignes.append(f"{'Utilisateur' if role == 'user' else 'IA'} : {texte}")
     dialogue = "\n\n".join(lignes)
-    return dialogue[-DIALOGUE_MAX:]
+    return dialogue[-maximum:] if maximum else dialogue
 
 
 def consigne(ia, dialogue, cwd, brain, projet):
