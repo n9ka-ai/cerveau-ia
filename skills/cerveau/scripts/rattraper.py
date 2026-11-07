@@ -9,6 +9,7 @@ Usage :
   rattraper.py trier [--depuis AAAA-MM-JJ] [--max N]   lit les conversations pas encore triées
   rattraper.py trier --auto --fichier <conversation>   appelé en fin de session : tri local seulement
   rattraper.py rapport                                 notes à ranger (JSON), à donner à l'IA
+  rattraper.py consolider                              2e passage local : par note, seulement le durable et le nouveau
   rattraper.py marquer [id ...]                        marque comme rangées (toutes si aucun id)
   rattraper.py etat [--reactiver]                      combien à ranger ; --reactiver relance le tri local
 
@@ -252,6 +253,68 @@ Conversation :
 {morceau}"""
 
 
+def consolider():
+    """Deuxième passage local : pour chaque note visée, ne garder que le durable et le nouveau.
+    Écrit le résultat dans rattrapage-consolide.json et l'affiche (bien plus court que le rapport)."""
+    brain = cerveau()
+    if not ollama_pret():
+        sys.exit("consolider demande le modèle local ; sans lui, utilise « rapport »")
+    par_note = {}
+    for e in sorted((e for e in lire_etat().values() if e.get("statut") == "trie"), key=lambda e: e["date"]):
+        for n in e.get("notes", []):
+            cible = (n.get("projet") or "a-trier").strip()
+            lignes = [f"[{e['date'][:10]}] " + x for k in ("a_retenir", "idees") for x in (n.get(k) or []) if x]
+            if lignes:
+                par_note.setdefault(cible, []).extend(lignes)
+    resultat = {}
+    for cible, lignes in par_note.items():
+        if cible == "a-trier":
+            resultat[cible] = {"a_trier": lignes}
+            continue
+        try:
+            actuelle = (brain / cible).read_text(encoding="utf-8")
+        except OSError:
+            actuelle = ""
+        paquets, courant = [], []
+        for l in lignes:
+            if sum(len(x) for x in courant) + len(l) > MORCEAU - len(actuelle) // 2:
+                paquets.append(courant)
+                courant = []
+            courant.append(l)
+        paquets.append(courant)
+        garde = {"regles_et_decisions": [], "idees": [], "a_faire": []}
+        for i, p in enumerate(paquets, 1):
+            print(f"{cible} : paquet {i}/{len(paquets)}", file=sys.stderr, flush=True)
+            r = demander(consigne_consolider(cible, actuelle[:12000], p))
+            for k in garde:
+                garde[k] += [x for x in (r.get(k) or []) if isinstance(x, str) and x.strip()]
+        resultat[cible] = garde
+    sortie = ETAT.with_name("rattrapage-consolide.json")
+    sortie.write_text(json.dumps(resultat, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps(resultat, ensure_ascii=False, indent=1))
+
+
+def consigne_consolider(cible, actuelle, lignes):
+    liste = "\n".join(f"- {l}" for l in lignes)
+    return f"""Tu tiens la note `{cible}` du cerveau (la mémoire) d'un utilisateur. Voici la note telle qu'elle est :
+
+<<<
+{actuelle}
+>>>
+
+Voici des éléments relevés dans ses anciennes conversations, avec leur date :
+
+{liste}
+
+Ne garde QUE ce qui servira encore dans un mois et que la note ne dit pas déjà :
+- règles de travail et décisions durables, avec leur raison si elle est donnée (« toujours… », « on ne fait plus… parce que… ») ;
+- idées pas encore réalisées : sujets, séries, formats, améliorations ;
+- choses à faire qui ne semblent pas faites.
+Jette tout ce qui est ponctuel ou terminé : fichier généré, vidéo rendue, programmée ou publiée, contrôle passé, état d'un jour.
+Fusionne les doublons. Phrases courtes, en français, avec la date entre crochets. N'invente rien.
+Réponds en JSON seulement : {{"regles_et_decisions": [...], "idees": [...], "a_faire": [...]}}"""
+
+
 def rapport():
     a_ranger = [e for e in lire_etat().values() if e.get("statut") == "trie"]
     print(json.dumps(sorted(a_ranger, key=lambda e: e["date"]), ensure_ascii=False, indent=1))
@@ -303,6 +366,8 @@ if __name__ == "__main__":
         trier(depuis, n, auto="--auto" in args, fichier=f)
     elif action == "rapport":
         rapport()
+    elif action == "consolider":
+        consolider()
     elif action == "marquer":
         marquer(set(args[1:]))
     elif action == "etat":
