@@ -102,6 +102,19 @@ rat trier --depuis 2026-09-01 >/dev/null
 verifie "rattraper : ne relit pas une conversation déjà vue" '[ "$(rat rapport | grep -c "\"id\"")" = 1 ]'
 rat marquer >/dev/null
 verifie "rattraper : marquer vide le rapport" '[ "$(rat rapport | tr -d "[:space:]")" = "[]" ] && ! ls "$t/home/.agents/reves/rattrapage/"*.md >/dev/null 2>&1'
+printf '{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Nouvelle conversation. %s"}]}}
+' "$long" > "$s/rollout-b.jsonl"
+rat trier --auto --fichier "$s/rollout-b.jsonl" >/dev/null
+verifie "rattraper : en fin de session, rien sans modèle local" '[ "$(rat rapport | tr -d "[:space:]")" = "[]" ]'
+rat trier --fichier "$s/rollout-b.jsonl" >/dev/null
+verifie "rattraper : prend la conversation qui vient de finir" 'rat rapport | grep -q "\"id\""'
+rat marquer >/dev/null
+touch "$t/home/.agents/reves/rattrapage.verrou"; touch -t 202610011200 "$s/rollout-b.jsonl"; printf '{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Et la suite du projet."}]}}
+' >> "$s/rollout-b.jsonl"; touch -t 202610011200 "$s/rollout-b.jsonl"
+verifie "rattraper : un seul tri à la fois" 'rat trier --depuis 2026-09-01; [ "$(rat rapport | tr -d "[:space:]")" = "[]" ]'
+rm -f "$t/home/.agents/reves/rattrapage.verrou"
+rat trier --depuis 2026-09-01 >/dev/null
+verifie "rattraper : une conversation reprise est relue (seulement la suite)" 'rat rapport | grep -q "\"id\""' 
 
 # ranger.py
 c="$t/cerveau"; mkdir -p "$c/projets/vieux" "$c/projets/neuf"

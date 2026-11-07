@@ -4,6 +4,8 @@
 Branché sur le hook SessionEnd de Claude Code et de Codex. Il ne rêve que pour les projets
 dont la fiche porte `reve: auto`, et seulement à partir du dialogue (pas des fichiers lus
 ni des résultats de commandes), avec un petit modèle et un plafond par jour.
+Pour toutes les conversations, rêve activé ou non, il lance aussi le tri local gratuit
+(rattraper.py --auto), qui ne fait rien si aucun modèle local n'est installé.
 
 Usage :
   rever.py claude|codex          appelé par le hook (lit le JSON du hook sur stdin)
@@ -171,6 +173,25 @@ def note(texte):
         f.write(f"{time.strftime('%Y-%m-%d %H:%M')} {texte}\n")
 
 
+def detacher(cmd):
+    """Lance une commande qui survit à l'IA, sans la faire attendre."""
+    options = dict(stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                   env=dict(os.environ, CERVEAU_REVE="1"))
+    if os.name == "nt":
+        options["creationflags"] = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        options["start_new_session"] = True
+    subprocess.Popen(cmd, **options)
+
+
+def trier_en_local(transcript):
+    """Tri gratuit de la conversation par le modèle local (rattraper.py), s'il est installé ;
+    sinon rattraper.py ne fait rien. Ça vaut pour tous les projets, rêve activé ou non."""
+    tri = SCRIPT.with_name("rattraper.py")
+    if tri.exists():
+        detacher([sys.executable, str(tri), "trier", "--auto", "--fichier", str(transcript)])
+
+
 def rever(ia):
     if os.environ.get("CERVEAU_REVE"):
         return
@@ -182,6 +203,7 @@ def rever(ia):
     brain = cerveau()
     if not brain or not transcript or not Path(transcript).exists():
         return
+    trier_en_local(transcript)
     projet = projet_auto(brain, cwd)
     if not projet:
         return  # projet sans rêve automatique : on sauve à la main
@@ -210,13 +232,7 @@ def rever(ia):
         "titre": f"{time.strftime('%Y-%m-%d %H:%M')} {ia} {projet} ({len(dialogue)} caractères de dialogue)",
     }, ensure_ascii=False), encoding="utf-8")
     # On rend la main tout de suite : un relais Python détaché fait le rêve.
-    options = dict(stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                   env=dict(os.environ, CERVEAU_REVE="1"))
-    if os.name == "nt":
-        options["creationflags"] = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-    else:
-        options["start_new_session"] = True
-    subprocess.Popen([sys.executable, str(SCRIPT), "_executer", str(tache)], **options)
+    detacher([sys.executable, str(SCRIPT), "_executer", str(tache)])
 
 
 def executer(tache):

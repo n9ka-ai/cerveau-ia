@@ -7,9 +7,10 @@ les fiches. Sans Ollama, les dialogues sont préparés pour qu'un petit modèle 
 
 Usage :
   rattraper.py trier [--depuis AAAA-MM-JJ] [--max N]   lit les conversations pas encore triées
+  rattraper.py trier --auto --fichier <conversation>   appelé en fin de session : tri local seulement
   rattraper.py rapport                                 notes à ranger (JSON), à donner à l'IA
   rattraper.py marquer [id ...]                        marque comme rangées (toutes si aucun id)
-  rattraper.py etat                                    combien de conversations à chaque étape
+  rattraper.py etat [--reactiver]                      combien à ranger ; --reactiver relance le tri local
 
 Réglages (variables d'environnement, facultatives) :
   CERVEAU                       chemin du cerveau (sinon lu dans les règles globales)
@@ -40,6 +41,8 @@ MORCEAU = 30_000         # caractères de dialogue lus par le modèle local en u
 MINIMUM = 1_500          # en dessous, rien à retenir
 RECENT = 20 * 60         # une conversation modifiée il y a moins de 20 min est peut-être encore ouverte
 INTERNES = ("Mode rêve", "Mode rattrapage", "Tu ranges la mémoire")
+LENT = 180               # secondes : au-delà, pour un morceau, la machine est trop lente pour le tri local
+LENT_MARQUE = ETAT.with_name("rattrapage.lent")
 
 
 def lire_etat():
@@ -138,17 +141,52 @@ def ollama_pret():
         return False
 
 
-def trier(depuis, maximum):
+def verrou():
+    """Un seul tri à la fois (fin de session et demande manuelle peuvent se croiser)."""
+    v = ETAT.with_name("rattrapage.verrou")
+    v.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if time.time() - v.stat().st_mtime > 3 * 3600:
+            v.unlink()  # verrou d'un tri planté
+    except OSError:
+        pass
+    try:
+        os.close(os.open(v, os.O_CREAT | os.O_EXCL))
+        return v
+    except OSError:
+        return None
+
+
+def trier(depuis, maximum, auto=False, fichier=None):
     brain = cerveau()
     if not brain:
         sys.exit("cerveau introuvable (variable CERVEAU, ou section ## Cerveau des règles globales)")
-    local = ollama_pret()
+    lent = LENT_MARQUE.exists()
+    local = not lent and ollama_pret()
+    if auto and not local:
+        return  # en fin de session, on ne trie qu'en local (gratuit) ; sinon rien
+    v = verrou()
+    if not v:
+        print("un tri est déjà en cours", file=sys.stderr)
+        return
+    try:
+        _trier(brain, depuis, maximum, local, lent, fichier)
+    finally:
+        v.unlink(missing_ok=True)
+
+
+def _trier(brain, depuis, maximum, local, lent, fichier):
     if not local:
-        print(f"Ollama ou le modèle {MODELE} est absent : dialogues préparés pour un petit modèle, sans tri local.",
-              file=sys.stderr)
+        print(("Machine trop lente pour le tri local (voir « etat »)" if lent else
+               f"Ollama ou le modèle {MODELE} est absent") +
+              " : dialogues préparés pour un petit modèle, sans tri local.", file=sys.stderr)
     etat, faits = lire_etat(), 0
     plan = carte(brain)
-    for m, ia, f in sorted(conversations(depuis), key=lambda x: x[0]):
+    liste = sorted(conversations(depuis), key=lambda x: x[0])
+    if fichier and Path(fichier).exists() and all(str(f) != str(fichier) for _, _, f in liste):
+        ia = "codex" if ".codex" in str(fichier) else "claude"
+        liste.append((Path(fichier).stat().st_mtime, ia, Path(fichier)))  # la session qui vient de finir
+    for m, ia, f in liste:
         if maximum and faits >= maximum:
             break
         cle = str(f)
@@ -168,7 +206,15 @@ def trier(depuis, maximum):
                 morceau = nouveau[i:i + MORCEAU]
                 print(f"{entree['date']} {ia} {entree['id']} : morceau {i // MORCEAU + 1}"
                       f"/{(len(nouveau) - 1) // MORCEAU + 1}", file=sys.stderr, flush=True)
+                debut = time.time()
                 notes.append(demander(consigne_tri(plan, entree, morceau)))
+                if time.time() - debut > LENT:
+                    LENT_MARQUE.write_text(f"{datetime.now():%Y-%m-%d %H:%M} : {time.time() - debut:.0f} s pour un morceau",
+                                           encoding="utf-8")
+                    print(f"Un morceau a pris plus de {LENT // 60} minutes : cette machine est trop lente pour le tri "
+                          "local. Il est coupé (rattraper.py etat pour le réactiver) ; l'IA lira les dialogues à la place.",
+                          file=sys.stderr)
+                    return
             entree["notes"] = notes
         else:
             PREPARES.mkdir(parents=True, exist_ok=True)
@@ -218,11 +264,18 @@ def marquer(ids):
     print(f"{n} conversation(s) marquée(s) comme rangée(s)")
 
 
-def compter():
+def compter(reactiver=False):
+    if reactiver:
+        LENT_MARQUE.unlink(missing_ok=True)
     etat = lire_etat()
-    for statut in ("trie", "range"):
-        print(f"{statut} : {sum(1 for e in etat.values() if e.get('statut') == statut)}")
-    print(f"modèle local : {MODELE} ({'prêt' if ollama_pret() else 'absent'})")
+    n = sum(1 for e in etat.values() if e.get("statut") == "trie")
+    print(f"à ranger : {n} conversation(s) triée(s)" + (" → propose de les ranger (geste « rattraper »)" if n else ""))
+    print(f"déjà rangées : {sum(1 for e in etat.values() if e.get('statut') == 'range')}")
+    if LENT_MARQUE.exists():
+        print(f"tri local coupé, machine trop lente ({LENT_MARQUE.read_text(encoding='utf-8')}) ; "
+              "« rattraper.py etat --reactiver » pour réessayer")
+    else:
+        print(f"tri local : {MODELE} ({'prêt' if ollama_pret() else 'absent'})")
 
 
 if __name__ == "__main__":
@@ -237,12 +290,13 @@ if __name__ == "__main__":
         d = args[args.index("--depuis") + 1] if "--depuis" in args else None
         depuis = datetime.strptime(d, "%Y-%m-%d").timestamp() if d else time.time() - 7 * 86400
         n = int(args[args.index("--max") + 1]) if "--max" in args else 0
-        trier(depuis, n)
+        f = args[args.index("--fichier") + 1] if "--fichier" in args else None
+        trier(depuis, n, auto="--auto" in args, fichier=f)
     elif action == "rapport":
         rapport()
     elif action == "marquer":
         marquer(set(args[1:]))
     elif action == "etat":
-        compter()
+        compter("--reactiver" in args)
     else:
         print(__doc__)

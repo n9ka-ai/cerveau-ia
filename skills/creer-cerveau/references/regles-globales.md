@@ -43,6 +43,7 @@ Même règle : remplace-la si elle existe, sinon ajoute-la.
 Mon cerveau est `<chemin complet>` : toutes mes IA partagent cette mémoire, rangée par projet.
 - Avant de travailler sur un projet, lis `AGENTS.md` et `index.md` du cerveau, puis la fiche du projet. Si tu es ouvert dans un dossier de travail, `index.md` dit à quel projet il appartient.
 - Le code, les vidéos et les gros fichiers restent dans le dossier de travail ; le cerveau garde ce qu'il faut *savoir* : état, décisions et leur raison, prochaines étapes.
+- Au début d'une session de travail, lance `python <skills>/cerveau/scripts/rattraper.py etat` ; s'il y a des conversations triées à ranger, propose-le en une ligne (geste « rattraper »), sans le faire d'office.
 - En fin de session, sauve : mets la fiche à jour et ajoute une ligne signée dans `journal.md`.
 - Mes skills à moi vivent dans `<cerveau>/skills/` et sont reliés dans `~/.agents/skills` et `~/.claude/skills`. Un skill que je crée ou modifie va là (skill `cerveau`, geste « sauver un skill »). Les skills installés depuis le dépôt de quelqu'un d'autre restent dans `~/.agents/skills` ; un skill propre à une seule IA reste dans son dossier à elle.
 ```
