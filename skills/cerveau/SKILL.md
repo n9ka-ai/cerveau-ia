@@ -1,6 +1,6 @@
 ---
 name: cerveau
-description: Les gestes du quotidien avec le cerveau de l'utilisateur (sa mémoire partagée par toutes ses IA) : charger un projet, nouveau projet, sauver, ingérer un document, interroger, ranger, sortir un projet en dossier de travail, adopter un dossier existant, archiver. Use when the user says « charge le projet X », « nouveau projet », « sauve », « sauvegarde », « je ferme », « je ferme ici », « on s'arrête là », « fin de session », « ingère ça », « range le cerveau », « relie ce dossier ».
+description: Les gestes du quotidien avec le cerveau de l'utilisateur (sa mémoire partagée par toutes ses IA) : charger un projet, nouveau projet, sauver, ingérer un document, interroger, ranger, sortir un projet en dossier de travail, adopter un dossier existant, archiver. Le cerveau est aussi appelé « brain », « second brain », « vault » ou « mémoire ». Use when the user says « charge le projet X », « nouveau projet », « sauve », « sauvegarde », « je ferme », « je ferme ici », « on s'arrête là », « fin de session », « ingère ça », « range le cerveau », « relie ce dossier ».
 argument-hint: "[charger|nouveau|sauver|ingerer|interroger|ranger|sortir|adopter|archiver] [projet ou fichier]"
 ---
 
