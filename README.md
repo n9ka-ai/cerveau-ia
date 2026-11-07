@@ -67,10 +67,10 @@ Puis crée un dossier vide, ouvre-le dans ton IA, et dis : **« Crée mon cervea
 
 ## D'où ça vient
 
+- Tiago Forte, *Building a Second Brain* (2022) : noter ce qui compte dans un endroit fiable, pour libérer sa tête.
 - Andrej Karpathy, [« LLM Wiki »](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) : l'IA tient elle-même un wiki, avec un sommaire, un journal, et trois gestes (ingérer, interroger, ranger).
-- Melvyn, [ai-sprint-skills](https://github.com/Melvynx/ai-sprint-skills) : le cerveau rangé par projet et les règles uniques pour toutes les IA.
 
-Ce dépôt reprend ces deux idées et ajoute les dossiers de travail, l'adoption de projets qui existent déjà, et la synchronisation avec un agent distant.
+Ce dépôt reprend ces deux idées et ajoute le cerveau rangé par projet, des règles uniques pour toutes les IA, les dossiers de travail, l'adoption de projets qui existent déjà, et la synchronisation avec un agent distant.
 
 ## Licence
 
