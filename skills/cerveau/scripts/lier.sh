@@ -29,7 +29,10 @@ elif [ -e "$ancien" ]; then
 fi
 
 # Adresse cliquable : espaces et caractères spéciaux encodés.
-url="file://$(case "$chemin" in /*) ;; *) printf /;; esac)$(printf '%s' "$chemin" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/#/%23/g' -e 's/(/%28/g' -e 's/)/%29/g')"
+# (Le test du « / » initial reste hors de $(…) : le bash 3.2 de macOS ne lit pas un case dans une substitution.)
+debut=/
+case "$chemin" in /*) debut= ;; esac
+url="file://$debut$(printf '%s' "$chemin" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/#/%23/g' -e 's/(/%28/g' -e 's/)/%29/g')"
 bouton="📂 [Ouvrir le dossier de travail]($url)"
 
 awk -v chemin="$chemin" -v bouton="$bouton" '
