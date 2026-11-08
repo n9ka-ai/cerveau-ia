@@ -8,11 +8,14 @@ La source est `~/.agents/AGENTS.md`. Les autres IA la lisent par un lien :
 | --- | --- | --- |
 | Claude Code | `~/.claude/CLAUDE.md` | lien vers `~/.agents/AGENTS.md` |
 | Codex | `~/.codex/AGENTS.md` (seulement si `~/.codex` existe) | lien vers `~/.agents/AGENTS.md` |
+| OpenCode | `~/.config/opencode/AGENTS.md` (seulement si `~/.config/opencode` existe) | lien vers `~/.agents/AGENTS.md` |
+
+Sans son propre fichier, OpenCode lit `~/.claude/CLAUDE.md` : le lien de Claude suffit alors. Mais s'il a déjà un `AGENTS.md` à lui, celui-ci passe avant : il faut donc le relier aussi. OpenCode lit aussi les skills de `~/.agents/skills` et `~/.claude/skills`. Il demande une autorisation pour écrire hors du dossier ouvert (« external_directory ») : dis à l'utilisateur de l'accepter pour ces fichiers de règles.
 
 1. Crée `~/.agents/AGENTS.md` s'il n'existe pas.
 2. Pour chaque fichier du tableau qui existe et n'est pas déjà un lien vers la source : ajoute à la source chacune de ses sections qu'elle n'a pas encore (une seule fois chacune), suis aussi ses imports (`@chemin`) pour ne rien perdre, puis mets l'ancien fichier à la corbeille ou dans `~/.agents/anciens/` et remplace-le par le lien.
 3. Crée le lien :
-   - macOS, Linux : `ln -sfn ~/.agents/AGENTS.md ~/.claude/CLAUDE.md` (et pareil pour Codex).
+   - macOS, Linux : `ln -sfn ~/.agents/AGENTS.md ~/.claude/CLAUDE.md` (et pareil pour Codex et OpenCode).
    - Windows (Git Bash) : `cmd //c mklink "$(cygpath -w ~/.claude/CLAUDE.md)" "$(cygpath -w ~/.agents/AGENTS.md)"`. Ça demande le mode développeur de Windows ou une session admin. Si ça échoue : pour Claude, écris dans `~/.claude/CLAUDE.md` la seule ligne `@~/.agents/AGENTS.md` (Claude suit l'import) ; pour Codex, fais un lien dur `cmd //c mklink /H …` (pas besoin d'admin). Un lien dur peut se casser si un éditeur réécrit le fichier : le geste « ranger » du skill `cerveau` vérifie que les deux contenus sont identiques.
 4. Vérifie en relisant `~/.claude/CLAUDE.md` : il doit afficher le contenu de la source.
 

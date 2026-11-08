@@ -2,7 +2,7 @@
 
 Donne une mémoire à tes IA. Claude, Codex ou un agent qui tourne sur ton serveur : elles lisent **le même cerveau**, savent qui tu es, où en est chaque projet et ce qui a été décidé. Tu changes d'IA, la mémoire reste.
 
-Deux skills, en français, pour Claude Code et Codex :
+Deux skills, en français, pour Claude Code, Codex et OpenCode (testé le 8 novembre 2026 avec un modèle gratuit d'OpenCode) :
 
 | Skill | Ce qu'il fait | Comment le lancer |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ On commence au niveau 1, on monte quand on en a besoin : relance `creer-cerveau`
 
 ## Installer
 
-Dans Claude Code (ou Codex), envoie :
+Dans Claude Code (ou Codex, ou OpenCode), envoie :
 
 ```text
 Installe ces skills : https://github.com/n9ka-ai/cerveau-ia
